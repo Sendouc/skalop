@@ -11,5 +11,9 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@remix-run/node": "^1.19.3",
+    "tiny-invariant": "^1.3.1"
   }
 }
