@@ -26,12 +26,19 @@ const server = Bun.serve<{ authToken: string }>({
       // TODO: parse the session here
       const userId = ws.data.authToken;
 
+      // sleep for 5sec
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       console.log(`Received ${message} from client ${userId}`);
+
+      const { id, contents } = JSON.parse(message as string);
+
       // send back a message
       ws.send(
         JSON.stringify({
+          id,
           type: "message",
-          contents: message,
+          contents,
           userId: userId,
           timestamp: Date.now(),
         })
