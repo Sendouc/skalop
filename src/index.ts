@@ -1,6 +1,6 @@
 import { getAuthenticatedUserId } from "./session";
 
-const server = Bun.serve<{ authToken: string }>({
+const server = Bun.serve<{ authToken: string; rooms: string[] }>({
   async fetch(req, server) {
     const userId = await getAuthenticatedUserId(req);
     console.log({ userId });
@@ -23,9 +23,7 @@ const server = Bun.serve<{ authToken: string }>({
   },
   websocket: {
     open(ws) {
-      // @ts-expect-error TODO: types
-      const rooms = ws.data.rooms as string[];
-      for (const room of rooms) {
+      for (const room of ws.data.rooms) {
         ws.subscribe(room);
       }
     },
@@ -53,9 +51,7 @@ const server = Bun.serve<{ authToken: string }>({
       );
     },
     close(ws) {
-      // @ts-expect-error TODO: types
-      const rooms = ws.data.rooms as string[];
-      for (const room of rooms) {
+      for (const room of ws.data.rooms) {
         ws.unsubscribe(room);
       }
     },
