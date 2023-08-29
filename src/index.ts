@@ -8,6 +8,7 @@ const server = Bun.serve<{ authToken: string }>({
       data: {
         // TODO: pass _session here
         authToken: userId,
+        rooms: new URL(req.url).searchParams.getAll("room"),
       },
     });
     if (success) {
@@ -21,20 +22,27 @@ const server = Bun.serve<{ authToken: string }>({
     return new Response(null, { status: 405 });
   },
   websocket: {
-    // this is called when a message is received
+    open(ws) {
+      // @ts-expect-error TODO: types
+      const rooms = ws.data.rooms as string[];
+      for (const room of rooms) {
+        ws.subscribe(room);
+      }
+    },
+    publishToSelf: true,
     async message(ws, message) {
       // TODO: parse the session here
       const userId = ws.data.authToken;
-
-      // sleep for 5sec
-      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       console.log(`Received ${message} from client ${userId}`);
 
       const { id, contents } = JSON.parse(message as string);
 
       // send back a message
-      ws.send(
+      // TODO: send back existing messages of the room(s)
+      // TODO: get room id to sent to from the message
+      ws.publish(
+        "TEST",
         JSON.stringify({
           id,
           type: "message",
@@ -43,6 +51,13 @@ const server = Bun.serve<{ authToken: string }>({
           timestamp: Date.now(),
         })
       );
+    },
+    close(ws) {
+      // @ts-expect-error TODO: types
+      const rooms = ws.data.rooms as string[];
+      for (const room of rooms) {
+        ws.unsubscribe(room);
+      }
     },
   },
 });
