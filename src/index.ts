@@ -34,18 +34,17 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
 
       console.log(`Received ${message} from client ${userId}`);
 
-      const { id, contents } = JSON.parse(message as string);
+      const { id, contents, room } = JSON.parse(message as string);
 
-      // send back a message
       // TODO: send back existing messages of the room(s)
-      // TODO: get room id to sent to from the message
       ws.publish(
-        "TEST",
+        room,
         JSON.stringify({
           id,
           type: "message",
           contents,
           userId: userId,
+          room,
           timestamp: Date.now(),
         })
       );
