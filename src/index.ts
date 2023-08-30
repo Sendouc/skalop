@@ -1,4 +1,6 @@
+import type { ChatMessage } from "./services/Chat";
 import { getAuthenticatedUserId } from "./session";
+import * as Chat from "./services/Chat";
 
 const server = Bun.serve<{ authToken: string; rooms: string[] }>({
   async fetch(req, server) {
@@ -22,32 +24,34 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
     return new Response(null, { status: 405 });
   },
   websocket: {
-    open(ws) {
+    async open(ws) {
       for (const room of ws.data.rooms) {
         ws.subscribe(room);
       }
+
+      const messages = await Promise.all(ws.data.rooms.map(Chat.getMessages));
+
+      ws.send(JSON.stringify(messages.flat()));
     },
     publishToSelf: true,
     async message(ws, message) {
       // TODO: parse the session here
       const userId = ws.data.authToken;
 
-      console.log(`Received ${message} from client ${userId}`);
-
       const { id, contents, room } = JSON.parse(message as string);
 
-      // TODO: send back existing messages of the room(s)
-      ws.publish(
+      const chatMessage: ChatMessage = {
+        id,
+        type: "message",
+        contents,
+        userId: Number(userId),
         room,
-        JSON.stringify({
-          id,
-          type: "message",
-          contents,
-          userId: userId,
-          room,
-          timestamp: Date.now(),
-        })
-      );
+        timestamp: Date.now(),
+      };
+
+      await Chat.saveMessage(chatMessage);
+
+      ws.publish(room, JSON.stringify(chatMessage));
     },
     close(ws) {
       for (const room of ws.data.rooms) {
