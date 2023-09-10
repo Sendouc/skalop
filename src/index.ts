@@ -2,6 +2,8 @@ import type { ChatMessage } from "./services/Chat";
 import { getAuthenticatedUserId } from "./session";
 import * as Chat from "./services/Chat";
 
+const MESSAGE_MAX_LENGTH = 200;
+
 const server = Bun.serve<{ authToken: string; rooms: string[] }>({
   async fetch(req, server) {
     const userId = await getAuthenticatedUserId(req);
@@ -43,7 +45,7 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
       const chatMessage: ChatMessage = {
         id,
         type: "message",
-        contents,
+        contents: contents.slice(0, MESSAGE_MAX_LENGTH),
         userId: Number(userId),
         room,
         timestamp: Date.now(),
