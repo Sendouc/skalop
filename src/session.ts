@@ -20,10 +20,9 @@ export const authSessionStorage = createCookieSessionStorage({
   },
 });
 
-// TODO: check how this works when deployed
-export async function getAuthenticatedUserId(req: Request) {
+export async function getAuthenticatedUserId(rawSessionValue: string) {
   const session = await authSessionStorage.getSession(
-    req.headers.get("Cookie")
+    `_session=${rawSessionValue}`
   );
 
   const userId =
@@ -31,3 +30,20 @@ export async function getAuthenticatedUserId(req: Request) {
 
   return userId as number | undefined;
 }
+
+// https://www.30secondsofcode.org/js/s/parse-cookie/
+const parseCookie = (str: string): Record<string, string> =>
+  str
+    .split(";")
+    .map((v) => v.split("="))
+    .reduce((acc, v) => {
+      // @ts-expect-error it's all gonna be fine typescript
+      acc[decodeURIComponent(v[0].trim())] = decodeURIComponent(v[1].trim());
+      return acc;
+    }, {});
+
+export const extractSession = (cookie: string | null) => {
+  if (!cookie) return null;
+
+  return parseCookie(cookie)["_session"] ?? null;
+};

@@ -1,22 +1,24 @@
 import type { ChatMessage } from "./services/Chat";
-import { getAuthenticatedUserId } from "./session";
+import { extractSession, getAuthenticatedUserId } from "./session";
 import * as Chat from "./services/Chat";
+import invariant from "tiny-invariant";
 
 const MESSAGE_MAX_LENGTH = 200;
 
 const server = Bun.serve<{ authToken: string; rooms: string[] }>({
   async fetch(req, server) {
-    const userId = await getAuthenticatedUserId(req);
-    console.log({ userId });
+    const session = extractSession(req.headers.get("Cookie"));
+    if (!session) {
+      return new Response(null, { status: 401 });
+    }
+
     const success = server.upgrade(req, {
       data: {
-        // TODO: pass _session here
-        authToken: userId,
+        authToken: session,
         rooms: new URL(req.url).searchParams.getAll("room"),
       },
     });
     if (success) {
-      console.log("connected...");
       // Bun automatically returns a 101 Switching Protocols
       // if the upgrade succeeds
       return undefined;
@@ -37,8 +39,8 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
     },
     publishToSelf: true,
     async message(ws, message) {
-      // TODO: parse the session here
-      const userId = ws.data.authToken;
+      const userId = await getAuthenticatedUserId(ws.data.authToken);
+      invariant(userId, "User must be authenticated to send messages");
 
       const { id, contents, room } = JSON.parse(message as string);
 
