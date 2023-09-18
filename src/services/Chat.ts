@@ -17,9 +17,9 @@ interface ChatService {
 
 const getKey = (message: ChatMessage) => `chat__${message.room}`;
 
-// TODO: add a TTL to the messages
 const saveMessage: ChatService["saveMessage"] = async (message) => {
   await redis.rpush(getKey(message), JSON.stringify(message));
+  await redis.expire(getKey(message), 60 * 60 * 24); // 24 hours, refreshes on new messages
 };
 
 const getMessages: ChatService["getMessages"] = async (room) => {
