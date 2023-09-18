@@ -2,9 +2,10 @@ import { redis } from "../redis";
 
 export interface ChatMessage {
   id: string;
-  type: "message" | "system";
-  contents: string;
-  userId: number;
+  type?: any;
+  contents?: string;
+  // context?: any;
+  userId?: number;
   timestamp: number;
   room: string;
 }
@@ -14,10 +15,9 @@ interface ChatService {
   getMessages(room: string): Promise<ChatMessage[]>;
 }
 
-const db = new Map<string, ChatMessage[]>();
-
 const getKey = (message: ChatMessage) => `chat__${message.room}`;
 
+// TODO: add a TTL to the messages
 const saveMessage: ChatService["saveMessage"] = async (message) => {
   await redis.rpush(getKey(message), JSON.stringify(message));
 };

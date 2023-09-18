@@ -44,7 +44,6 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
 
       const chatMessage: ChatMessage = {
         id,
-        type: "message",
         contents: contents.slice(0, MESSAGE_MAX_LENGTH),
         userId: Number(userId),
         room,
