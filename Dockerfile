@@ -1,6 +1,7 @@
 FROM oven/bun
 ARG REDIS_URL
 ARG SKALOP_TOKEN
+ARG PORT
 
 WORKDIR /usr/src/app
 
