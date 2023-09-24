@@ -9,6 +9,7 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
   async fetch(req, server) {
     const session = extractSession(req.headers.get("Cookie"));
     if (!session) {
+      console.warn("No session found");
       return new Response(null, { status: 401 });
     }
 
@@ -19,10 +20,13 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
       },
     });
     if (success) {
+      console.log("Upgrade succeeded");
       // Bun automatically returns a 101 Switching Protocols
       // if the upgrade succeeds
       return undefined;
     }
+
+    console.warn("Upgrade failed");
 
     // handle HTTP request normally
     return new Response(null, { status: 405 });
