@@ -10,7 +10,7 @@ if (process.env.NODE_ENV === "production") {
 }
 export const authSessionStorage = createCookieSessionStorage({
   cookie: {
-    name: "_session",
+    name: "__session",
     sameSite: "lax",
     path: "/",
     httpOnly: true,
@@ -22,7 +22,7 @@ export const authSessionStorage = createCookieSessionStorage({
 
 export async function getAuthenticatedUserId(rawSessionValue: string) {
   const session = await authSessionStorage.getSession(
-    `_session=${rawSessionValue}`
+    `__session=${rawSessionValue}`
   );
 
   const userId =
@@ -45,5 +45,5 @@ const parseCookie = (str: string): Record<string, string> =>
 export const extractSession = (cookie: string | null) => {
   if (!cookie) return null;
 
-  return parseCookie(cookie)["_session"] ?? null;
+  return parseCookie(cookie)["__session"] ?? null;
 };
