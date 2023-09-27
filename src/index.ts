@@ -7,7 +7,6 @@ const MESSAGE_MAX_LENGTH = 200;
 
 const server = Bun.serve<{ authToken: string; rooms: string[] }>({
   async fetch(req, server) {
-    console.log("Cookie", req.headers.get("Cookie"));
     const session = extractSession(req.headers.get("Cookie"));
     if (!session) {
       console.warn("No session found");
@@ -21,7 +20,6 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
       },
     });
     if (success) {
-      console.log("Upgrade succeeded");
       // Bun automatically returns a 101 Switching Protocols
       // if the upgrade succeeds
       return undefined;
