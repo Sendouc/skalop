@@ -42,6 +42,10 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
     },
     publishToSelf: true,
     async message(ws, message) {
+      console.log({ message });
+      // it's a ping to keep the connection alive
+      if (message === "") return;
+
       const userId = await getAuthenticatedUserId(ws.data.authToken);
       invariant(userId, "User must be authenticated to send messages");
 
