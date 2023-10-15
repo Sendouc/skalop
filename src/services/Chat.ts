@@ -2,9 +2,10 @@ import { redis } from "../redis";
 
 export interface ChatMessage {
   id: string;
-  type?: any;
-  contents?: string;
-  // context?: any;
+  type?: string;
+  contents?: any;
+  revalidateOnly?: boolean;
+  context?: any;
   userId?: number;
   timestamp: number;
   room: string;

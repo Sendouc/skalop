@@ -2,11 +2,28 @@ import type { ChatMessage } from "./services/Chat";
 import { extractSession, getAuthenticatedUserId } from "./session";
 import * as Chat from "./services/Chat";
 import invariant from "tiny-invariant";
+import { msgShouldBePersisted } from "./utils";
 
 const MESSAGE_MAX_LENGTH = 200;
 
+invariant(process.env["SKALOP_TOKEN"], "Missing env var: SKALOP_TOKEN");
 const server = Bun.serve<{ authToken: string; rooms: string[] }>({
   async fetch(req, server) {
+    // handle messages sent by sendou.ink backend
+    if (new URL(req.url).pathname === "/system") {
+      if (req.headers.get("Skalop-Token") !== process.env["SKALOP_TOKEN"]) {
+        return new Response(null, { status: 401 });
+      }
+
+      const msgArr = (await req.json()) as ChatMessage[];
+
+      for (const msg of msgArr) {
+        if (msgShouldBePersisted(msg)) await Chat.saveMessage(msg);
+
+        server.publish(msg.room, JSON.stringify(msg));
+      }
+    }
+
     const session = extractSession(req.headers.get("Cookie"));
     if (!session) {
       console.warn("No session found");
@@ -37,8 +54,11 @@ const server = Bun.serve<{ authToken: string; rooms: string[] }>({
       }
 
       const messages = await Promise.all(ws.data.rooms.map(Chat.getMessages));
+      const flattenedMessages = messages.flat();
 
-      ws.send(JSON.stringify(messages.flat()));
+      if (flattenedMessages.length > 0) {
+        ws.send(JSON.stringify(flattenedMessages));
+      }
     },
     publishToSelf: true,
     async message(ws, message) {
