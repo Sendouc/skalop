@@ -20,7 +20,7 @@ const getKey = (message: ChatMessage) => `chat__${message.room}`;
 
 const saveMessage: ChatService["saveMessage"] = async (message) => {
   await redis.rpush(getKey(message), JSON.stringify(message));
-  await redis.expire(getKey(message), 60 * 60 * 24 * 3); // 3 days, refreshes on new messages
+  await redis.expire(getKey(message), 60 * 60 * 24 * 30); // 30 days, refreshes on new messages
 };
 
 const getMessages: ChatService["getMessages"] = async (room) => {
